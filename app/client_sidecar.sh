@@ -3,6 +3,14 @@
 # shellcheck source=/dev/null
 source /app/utils.sh
 
+log info "Starting sidecar"
+
+if [[ -f /var/run/app/gw-svc ]]; then
+    log info "Pod gateway service: $(cat /var/run/app/gw-svc)"
+else
+    log info "Pod gateway service: $1"
+fi
+
 {
     while true; do
         sleep "$APP_RECONNECT_INTERVAL"
@@ -28,22 +36,26 @@ source /app/utils.sh
 } &
 sidecar=$!
 
+log info "Sidecar started with PID: $sidecar"
+
 _kill_procs() {
-    echo "Signal received -> killing processes"
+    log info "Signal received -> killing processes"
 
     kill -TERM $sidecar || true
     wait $sidecar
     rc=$?
 
     rc=$(( $rc || $? ))
-    echo "Terminated with RC: $rc"
+    log info "Terminated with RC: $rc"
     exit $rc
 }
 
 trap _kill_procs SIGTERM
 
+log info "Waiting for sidecar to terminate"
+
 wait -n
 
-echo "TERMINATING"
+log info "TERMINATING"
 
 _kill_procs

@@ -85,11 +85,11 @@ while [[ "$(kubectl get pods -l app=gateway -o jsonpath='{.items[0].status.phase
     sleep 1
 done
 
+echo
 sleep 3
 
 kubectl apply -f "test/client.yaml"
 
-echo
 echo 'Waiting for client to be ready'
 
 while [[ "$(kubectl get pods -l app=client -o jsonpath='{.items[0].status.phase}')" != 'Running' ]]; do
@@ -97,6 +97,7 @@ while [[ "$(kubectl get pods -l app=client -o jsonpath='{.items[0].status.phase}
     sleep 1
 done
 
+echo
 sleep 3
 
 echo
@@ -106,30 +107,30 @@ echo
 kubectl get pods -o wide
 
 echo
-kubectl logs client --container gateway-init
-
+echo "----------------------------- client logs -----------------------------"
 echo
-kubectl logs client --container gateway-sidecar
+kubectl exec -it client --container gateway-sidecar -- bash -c 'cat /var/log/*.log'
 
 GATEWAY_POD_NAME="$(kubectl get pods -l app=gateway -o jsonpath='{.items[0].metadata.name}' -n expressvpn)"
 
 echo
-kubectl logs "$GATEWAY_POD_NAME" -n expressvpn --container gateway-init
-
+echo "----------------------------- $GATEWAY_POD_NAME logs -----------------------------"
 echo
-kubectl logs "$GATEWAY_POD_NAME" -n expressvpn --container gateway-sidecar
+kubectl exec -it "$GATEWAY_POD_NAME" -n expressvpn --container gateway-sidecar -- bash -c 'cat /var/log/*.log'
 
 HOST_GLOBAL_IP="$(curl -fs ifconfig.me/ip)"
-POD_GLOBAL_IP="$(kubectl exec client -- curl -s ifconfig.me/ip)"
+POD_GLOBAL_IP="$(kubectl exec client --container client-app -- curl -s ifconfig.me/ip)"
 
 if [[ "$HOST_GLOBAL_IP" != "$POD_GLOBAL_IP" ]]; then
     echo
-    echo 'Success'
+    echo 'Success (^^)'
 else
     echo
-    echo 'Failed'
+    echo 'Failed (><)'
 fi
 
+echo "Global Host IP: $HOST_GLOBAL_IP"
+echo "Global Pod IP:  $POD_GLOBAL_IP"
 echo
 echo 'Press Ctrl+C to stop'
 

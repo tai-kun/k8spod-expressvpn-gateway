@@ -3,6 +3,8 @@
 # shellcheck source=/dev/null
 source /app/utils.sh
 
+log info "Starting init"
+
 sysctl -w net.ipv4.ip_forward=1
 
 if ip addr | grep -q vxlan11298; then
@@ -14,3 +16,5 @@ ip addr add "$APP_GATEWAY_VXLAN_IP/24" dev vxlan11298 || true
 ip link set up dev vxlan11298
 
 iptables -t nat -A POSTROUTING -j MASQUERADE
+
+log info "Init done"

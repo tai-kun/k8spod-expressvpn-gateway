@@ -3,6 +3,8 @@
 # shellcheck source=/dev/null
 source /app/utils.sh
 
+log info "Starting sidecar"
+
 /app/copy_resolv.sh
 
 K8S_DNS="$(grep nameserver /etc/resolv.conf.org | cut -d' ' -f2)"
@@ -28,14 +30,20 @@ EOF
 dnsmasq -k &
 dnsmasq=$!
 
+log info "dnsmasq started with PID: $dnsmasq"
+
 inotifyd /app/copy_resolv.sh /etc/resolv.conf:ce &
 inotifyd=$!
+
+log info "inotifyd started with PID: $inotifyd"
 
 socat TCP-LISTEN:11298,fork,reuseaddr SYSTEM:/app/server.sh &
 socat=$!
 
+log info "socat started with PID: $socat"
+
 _kill_procs() {
-    echo "Signal received -> killing processes"
+    log info "Signal received -> killing processes"
 
     kill -TERM $dnsmasq || true
     wait $dnsmasq
@@ -48,14 +56,16 @@ _kill_procs() {
     wait $socat
 
     rc=$(( $rc || $? ))
-    echo "Terminated with RC: $rc"
+    log info "Terminated with RC: $rc"
     exit $rc
 }
 
 trap _kill_procs SIGTERM
 
+log info "Waiting for sidecar to terminate"
+
 wait -n
 
-echo "TERMINATING"
+log info "TERMINATING"
 
 _kill_procs
