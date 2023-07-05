@@ -72,10 +72,13 @@ dhclient -v -cf /etc/dhclient.conf vxlan11298
 
 log info "VXLAN IP: $(ip addr show vxlan11298 | awk '/inet / { print $2 }')"
 
-log info "IP addresses:"
 ip addr
-log info "IP routes:"
 ip route
+
+log info "IP addresses:
+$(ip addr)"
+log info "IP routes:
+$(ip route)"
 
 ping -c 1 "$APP_GATEWAY_VXLAN_IP"
 ping -c 1 8.8.8.8
