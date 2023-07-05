@@ -3,14 +3,12 @@
 # shellcheck source=/dev/null
 source /app/utils.sh
 
-set -euxo pipefail
-
 POD_GATEWAY_SERVICE="$1"
 POD_GATEWAY_IP="$(curl -fs "http://$POD_GATEWAY_SERVICE")"
 
 assert_ipv4 "$POD_GATEWAY_IP"
 
-echo -n "$POD_GATEWAY_SERVICE" > /var/run/pod_gateway_service
+echo -n "$POD_GATEWAY_SERVICE" > /var/run/app/gw-svc
 
 log info "Pod gateway service: $POD_GATEWAY_SERVICE"
 log info "Pod gateway IP: $POD_GATEWAY_IP"

@@ -3,8 +3,6 @@
 # shellcheck source=/dev/null
 source /app/utils.sh
 
-set -euxo pipefail
-
 /app/copy_resolv.sh
 
 K8S_DNS="$(grep nameserver /etc/resolv.conf.org | cut -d' ' -f2)"

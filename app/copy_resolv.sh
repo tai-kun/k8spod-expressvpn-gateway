@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -euxo pipefail
-
 # shellcheck source=/dev/null
 source /app/utils.sh
 

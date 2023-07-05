@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eu
+set -euo pipefail
 
 export APP_LOG_LV="${APP_LOG_LV:-info}"
 export APP_LOG_DIR="${APP_LOG_DIR:-/var/log}"
@@ -23,6 +23,12 @@ function _to_log_level_num() {
 APP_LOG_LV="${APP_LOG_LV,,}"
 APP_LOG_LV_NUM=$(_to_log_level_num "$APP_LOG_LV")
 APP_LOG_FILE_DATETIME="$(date -u '+%Y%m%d')"
+
+if [[ "$APP_LOG_LV_NUM" -le 10 ]]; then
+    APP_DEBUG=true
+else
+    APP_DEBUG=false
+fi
 
 function _get_log_file() {
     local DATETIME
@@ -121,3 +127,9 @@ function assert_uint32() {
 assert_ipv4 "$APP_GATEWAY_VXLAN_IP"
 assert_cidrs "$APP_LOCAL_CIDRS"
 assert_uint32 "$APP_RECONNECT_INTERVAL"
+
+if [[ "$APP_DEBUG" = true ]]; then
+    set -x
+fi
+
+mkdir -p /var/run/app

@@ -3,8 +3,6 @@
 # shellcheck source=/dev/null
 source /app/utils.sh
 
-set -euxo pipefail
-
 sysctl -w net.ipv4.ip_forward=1
 
 if ip addr | grep -q vxlan11298; then

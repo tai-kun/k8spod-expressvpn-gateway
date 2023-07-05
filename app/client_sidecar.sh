@@ -3,8 +3,6 @@
 # shellcheck source=/dev/null
 source /app/utils.sh
 
-set -euxo pipefail
-
 {
     while true; do
         sleep "$APP_RECONNECT_INTERVAL"
@@ -16,7 +14,14 @@ set -euxo pipefail
         ip route del default || true
 
         log warn 'Blocked all outbound traffic.'
-        log info "Reconnecting to http://$(cat /var/run/pod_gateway_service)"
+
+        if [[ -f /var/run/app/gw-svc ]]; then
+            POD_GATEWAY_SERVICE="$(cat /var/run/app/gw-svc)"
+        else
+            POD_GATEWAY_SERVICE="$1"
+        fi
+
+        log info "Reconnecting to http://$POD_GATEWAY_SERVICE"
 
         /app/client_init.sh || true
     done
