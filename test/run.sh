@@ -2,7 +2,7 @@
 
 set -eu
 
-APP_TAG='ghcr.io/tai-kun/expressvpn-pod-gateway:dev' # latest を使わないか、imagePullPolicy: Never にする
+APP_TAG='ghcr.io/tai-kun/k8spod-expressvpn-gateway:dev' # latest を使わないか、imagePullPolicy: Never にする
 CLUSTER_NAME="${CLUSTER_NAME:-test}"
 KIND_VERSION="${KIND_VERSION:-0.17.0}"
 KUBECTL_VERSION="${KUBECTL_VERSION:-1.26.0}"

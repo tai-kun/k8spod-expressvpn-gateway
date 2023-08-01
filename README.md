@@ -1,4 +1,4 @@
-# expressvpn-pod-gateway
+# k8spod-expressvpn-gateway
 
 Inspired by [angelnu/pod-gateway](https://github.com/angelnu/pod-gateway).
 

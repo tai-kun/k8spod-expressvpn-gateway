@@ -50,7 +50,7 @@ spec:
     spec:
       initContainers:
         - name: gateway-init
-          image: ghcr.io/tai-kun/expressvpn-pod-gateway:dev
+          image: ghcr.io/tai-kun/k8spod-expressvpn-gateway:dev
           env:
             - name: APP_LOG_LV
               value: debug
@@ -64,7 +64,7 @@ spec:
               mountPath: /var/log
       containers:
         - name: gateway-sidecar
-          image: ghcr.io/tai-kun/expressvpn-pod-gateway:dev
+          image: ghcr.io/tai-kun/k8spod-expressvpn-gateway:dev
           env:
             - name: APP_LOG_LV
               value: debug

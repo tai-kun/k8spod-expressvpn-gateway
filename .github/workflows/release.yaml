@@ -28,6 +28,6 @@ jobs:
         run: |
           docker buildx build --no-cache --push \
             --platform ${{ steps.buildx.outputs.platforms }} \
-            --tag ghcr.io/$GITHUB_ACTOR/expressvpn-pod-gateway:latest \
-            --tag ghcr.io/$GITHUB_ACTOR/expressvpn-pod-gateway:${GITHUB_REF##*/} \
+            --tag ghcr.io/$GITHUB_ACTOR/k8spod-expressvpn-gateway:latest \
+            --tag ghcr.io/$GITHUB_ACTOR/k8spod-expressvpn-gateway:${GITHUB_REF##*/} \
             .
