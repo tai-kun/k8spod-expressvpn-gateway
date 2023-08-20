@@ -4,8 +4,8 @@ set -eu
 
 APP_TAG='ghcr.io/tai-kun/k8spod-expressvpn-gateway:dev' # latest を使わないか、imagePullPolicy: Never にする
 CLUSTER_NAME="${CLUSTER_NAME:-test}"
-KIND_VERSION="${KIND_VERSION:-0.17.0}"
-KUBECTL_VERSION="${KUBECTL_VERSION:-1.26.0}"
+KIND_VERSION="${KIND_VERSION:-0.20.0}"
+KUBE_VERSION="${KUBE_VERSION:-1.27.3}"
 EXPRESSVPN_CODE="${1:-}"
 
 if [[ "$EXPRESSVPN_CODE" == '' ]]; then
@@ -44,13 +44,13 @@ function download_once() {
 }
 
 KIND=".cache/bin/kind-v$KIND_VERSION"
-KUBECTL=".cache/bin/kubectl-v$KUBECTL_VERSION"
-KUBECONFIG=".cache/kube/config-v$KUBECTL_VERSION"
+KUBECTL=".cache/bin/kubectl-v$KUBE_VERSION"
+KUBECONFIG=".cache/kube/config-v$KUBE_VERSION"
 
 export KUBECONFIG="$PWD/$KUBECONFIG"
 
 download_once "$KIND" "https://kind.sigs.k8s.io/dl/v$KIND_VERSION/kind-linux-amd64"
-download_once "$KUBECTL" "https://dl.k8s.io/release/v$KUBECTL_VERSION/bin/linux/amd64/kubectl"
+download_once "$KUBECTL" "https://dl.k8s.io/release/v$KUBE_VERSION/bin/linux/amd64/kubectl"
 
 chmod +x "$KIND"
 chmod +x "$KUBECTL"
@@ -72,7 +72,9 @@ apiVersion: kind.x-k8s.io/v1alpha4
 kind: Cluster
 nodes:
     - role: control-plane
+      image: kindest/node:v$KUBE_VERSION
     - role: worker
+      image: kindest/node:v$KUBE_VERSION
 EOF
 )
 
