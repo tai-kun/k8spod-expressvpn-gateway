@@ -5,7 +5,7 @@ set -eu
 APP_TAG='ghcr.io/tai-kun/k8spod-expressvpn-gateway:dev' # latest を使わないか、imagePullPolicy: Never にする
 CLUSTER_NAME="${CLUSTER_NAME:-test}"
 KIND_VERSION="${KIND_VERSION:-0.20.0}"
-KUBE_VERSION="${KUBE_VERSION:-1.27.3}"
+KUBE_VERSION="${KUBE_VERSION:-1.28.0}"
 EXPRESSVPN_CODE="${1:-}"
 
 if [[ "$EXPRESSVPN_CODE" == '' ]]; then
@@ -46,6 +46,10 @@ function download_once() {
 KIND=".cache/bin/kind-v$KIND_VERSION"
 KUBECTL=".cache/bin/kubectl-v$KUBE_VERSION"
 KUBECONFIG=".cache/kube/config-v$KUBE_VERSION"
+
+echo
+echo "KUBECONFIG='$KUBECONFIG' '$KUBECTL'"
+echo
 
 export KUBECONFIG="$PWD/$KUBECONFIG"
 
