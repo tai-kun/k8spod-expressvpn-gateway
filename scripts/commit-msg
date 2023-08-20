@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+MESSAGE="$1"
+
+function regex() {
+    local PATTERN
+    PATTERN="$1"
+
+    [[ "$(echo -n "$MESSAGE" | grep -oP "$PATTERN")" != '' ]]
+}
+
+TYPE='(docs|style|refactor|perf|test|chore|revert|feat|fix|build)'
+SCOPE='(app|docs|scripts|test|\.gitignore|Dockerfile|README\.md)'
+
+regex "^$TYPE(\($SCOPE\))?: .+$" && exit 0
+regex "^ci: .+$" && exit 0
+
+echo 'Invalid commit message format'
+exit 1
