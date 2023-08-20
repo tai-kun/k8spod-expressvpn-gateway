@@ -10,39 +10,23 @@ spec:
   initContainers:
     - name: gateway-init
       image: ghcr.io/tai-kun/k8spod-expressvpn-gateway:dev
-      env:
-        - name: APP_LOG_LV
-          value: debug
       args:
         - client
         - init
         - us.expressvpn.svc.cluster.local
       securityContext:
         privileged: true
-      volumeMounts:
-        - name: log
-          mountPath: /var/log
   containers:
     - name: gateway-sidecar
       image: ghcr.io/tai-kun/k8spod-expressvpn-gateway:dev
-      env:
-        - name: APP_LOG_LV
-          value: debug
       args:
         - client
         - sidecar
         - us.expressvpn.svc.cluster.local
       securityContext:
         privileged: true
-      volumeMounts:
-        - name: log
-          mountPath: /var/log
     - name: client-app
       image: curlimages/curl:8.1.2
       command:
         - sleep
         - infinity
-  volumes:
-    - name: log
-      emptyDir:
-        medium: Memory

@@ -113,16 +113,21 @@ echo
 "$KUBECTL" get pods -o wide
 
 echo
-echo "----------------------------- client logs -----------------------------"
+echo "----------------------------- client > gateway-init logs -----------------------------"
 echo
-"$KUBECTL" exec -it client --container gateway-sidecar -- bash -c 'cat /var/log/*.log'
+"$KUBECTL" logs client -c gateway-init
+
+echo
+echo "----------------------------- client > gateway-sidecar logs -----------------------------"
+echo
+"$KUBECTL" logs client -c gateway-sidecar
 
 GATEWAY_POD_NAME="$("$KUBECTL" get pods -l app=gateway -o jsonpath='{.items[0].metadata.name}' -n expressvpn)"
 
 echo
-echo "----------------------------- $GATEWAY_POD_NAME logs -----------------------------"
+echo "----------------------------- $GATEWAY_POD_NAME > gateway-sidecar logs -----------------------------"
 echo
-"$KUBECTL" exec -it "$GATEWAY_POD_NAME" -n expressvpn --container gateway-sidecar -- bash -c 'cat /var/log/*.log'
+"$KUBECTL" logs "$GATEWAY_POD_NAME" -c gateway-sidecar -n expressvpn
 
 HOST_GLOBAL_IP="$(curl -fs ifconfig.me/ip)"
 POD_GLOBAL_IP="$("$KUBECTL" exec client --container client-app -- curl -s ifconfig.me/ip)"

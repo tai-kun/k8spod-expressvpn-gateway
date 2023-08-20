@@ -51,23 +51,14 @@ spec:
       initContainers:
         - name: gateway-init
           image: ghcr.io/tai-kun/k8spod-expressvpn-gateway:dev
-          env:
-            - name: APP_LOG_LV
-              value: debug
           args:
             - gateway
             - init
           securityContext:
             privileged: true
-          volumeMounts:
-            - name: log
-              mountPath: /var/log
       containers:
         - name: gateway-sidecar
           image: ghcr.io/tai-kun/k8spod-expressvpn-gateway:dev
-          env:
-            - name: APP_LOG_LV
-              value: debug
           args:
             - gateway
             - sidecar
@@ -75,9 +66,6 @@ spec:
             - containerPort: 11298
           securityContext:
             privileged: true
-          volumeMounts:
-            - name: log
-              mountPath: /var/log
         - name: gateway
           image: misioslav/expressvpn:3.47.0.3
           imagePullPolicy: IfNotPresent
@@ -89,7 +77,3 @@ spec:
                 name: expressvpn
           securityContext:
             privileged: true
-      volumes:
-        - name: log
-          emptyDir:
-            medium: Memory
