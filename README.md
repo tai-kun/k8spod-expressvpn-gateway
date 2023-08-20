@@ -4,33 +4,40 @@ Inspired by [angelnu/pod-gateway](https://github.com/angelnu/pod-gateway).
 
 ## デフォルトの挙動
 
-![design](design.jpg)
+![design](./docs/assets/images/design.jpg)
 
 1. vxlan11298 を作成する。
-2. DNS と、自身の (K8s 内での) IP アドレスを返すサーバーを起動する。
-3. Client Pod のトラフィックに制限をかける。
+2. K8s 内での IP アドレスを返すサーバーと DNS を起動する。
+3. Client Pod のトラフィック制限を行う。
    1. 基本的に全トラフィックを遮断する。
-   2. 10.0.0.0/8 と 192.168.0.0/16 はこれまで通り疎通可能にする。
-   3. Gateway Pod の (K8s 内での) IP アドレスを取得する。
+   2. 10.0.0.0/8 と 192.168.0.0/16 は通信を許可する。
+   3. K8s 内での Gateway Pod の IP アドレスを取得する。
    4. vxlan11298 を作成する。
-4. dhclient を使って (VXLAN 内での) IP アドレスを取得・設定する。
-5. Gateway Pod と疎通を定期的に確認し、途切れたら 3. に戻る。
-6. グローバル行きのトラフィックは expressvpn を通る。
-7. ローカル行きのトラフィックは expressvpn を通らない。
+4. dhclient を使用して VXLAN 内での IP アドレスを取得・設定する。
+5. 定期的に Gateway Pod との疎通を確認し、途切れた場合は 3. に戻る。
+6. グローバル行きのトラフィックは expressvpn を経由する。
+7. ローカル行きのトラフィックは expressvpn を経由しない。
 
 ## Gateway Pod の (K8s 内での) IP アドレス
 
-![resource](resource.jpg)
+![resource](./docs/assets/images/resource.jpg)
 
 1. `curl -fs http://jp.expressvpn.cluster.local`
 2. expressvpn が起動している Pod の IP アドレスが返ってくる。
 
-Service 経由で、Deployment に所属する Pod にアクセスすると、Pod の IP アドレスが返ってくる。Service で ExpressVPN で接続する国をまとめて、Deployment で (都市などの) 場所をまとめることができる。必ずこのような構成にする必要はないが、以下のように管理がシンプルになる。
+Service 経由で Deployment に所属する Pod にアクセスすると、Pod の IP アドレスが提供される。
+Service を使用して ExpressVPN で接続する国をグループ化し、Deployment で都市などの場所を整理することができる。
+必ずしもこのような構成にする必要はないが、以下のようなアプローチで管理が簡素化される。
 
-- 接続する国の追加/削除は、Service の変更で対応できる。
-- 都市などの場所の追加/削除は、Deployment の変更で対応できる。
-- 冗長化は、Deployment の replica 数を増やすことで対応できる。
+- 接続する国の追加や削除は、Service の変更で容易に行える。
+- 都市などの場所の追加や削除は、Deployment の変更によって対応可能。
+- 冗長性を確保するには、Deployment のレプリカ数を増やすことで対処可能。
 
 ## 設定例
 
-`test/` を参照。`test/run.sh` を実行すると、[kind](https://github.com/kubernetes-sigs/kind) と kubectl がダウンロードされるが、`.cache/bin` にダウンロードされるので、グローバル環境が汚染されることはない (はず)。なお、実行には ExpressVPN のアクティベーションコードが必要。
+`test/` ディレクトリを参照。
+`test/run.sh` を実行すると、[kind](https://github.com/kubernetes-sigs/kind) と kubectl がダウンロードされるが、これは `.cache/bin` にダウンロードされるため、グローバル環境が影響を受けることは無いはず。
+
+## 注意
+
+実行には ExpressVPN のアクティベーションコードが必要。
