@@ -43,10 +43,11 @@ function download_once() {
     fi
 }
 
-KIND='.cache/bin/kind'
-KUBECTL='.cache/bin/kubectl'
+KIND=".cache/bin/kind-v$KIND_VERSION"
+KUBECTL=".cache/bin/kubectl-v$KUBECTL_VERSION"
+KUBECONFIG=".cache/kube/config-v$KUBECTL_VERSION"
 
-export PATH="$PWD/.cache/bin:$PATH"
+export KUBECONFIG="$PWD/$KUBECONFIG"
 
 download_once "$KIND" "https://kind.sigs.k8s.io/dl/v$KIND_VERSION/kind-linux-amd64"
 download_once "$KUBECTL" "https://dl.k8s.io/release/v$KUBECTL_VERSION/bin/linux/amd64/kubectl"
@@ -54,16 +55,19 @@ download_once "$KUBECTL" "https://dl.k8s.io/release/v$KUBECTL_VERSION/bin/linux/
 chmod +x "$KIND"
 chmod +x "$KUBECTL"
 
+mkdir -p "$(dirname "$KUBECONFIG")"
+touch "$KUBECONFIG"
+
 function _kill() {
     echo
 
-    kind delete cluster --name "$CLUSTER_NAME"
+    "$KIND" delete cluster --name "$CLUSTER_NAME"
 }
 
 trap _kill ERR
 trap _kill SIGINT
 
-kind create cluster --name "$CLUSTER_NAME" --config <(cat <<EOF
+"$KIND" create cluster --name "$CLUSTER_NAME" --config <(cat <<EOF
 apiVersion: kind.x-k8s.io/v1alpha4
 kind: Cluster
 nodes:
@@ -72,15 +76,15 @@ nodes:
 EOF
 )
 
-kind load docker-image --name "$CLUSTER_NAME" "$APP_TAG"
+"$KIND" load docker-image --name "$CLUSTER_NAME" "$APP_TAG"
 
-kubectl create namespace expressvpn
-kubectl create secret generic expressvpn --type=Opaque --from-literal=CODE="$EXPRESSVPN_CODE" -n expressvpn
-kubectl apply -f "test/gateway.yaml"
+"$KUBECTL" create namespace expressvpn
+"$KUBECTL" create secret generic expressvpn --type=Opaque --from-literal=CODE="$EXPRESSVPN_CODE" -n expressvpn
+"$KUBECTL" apply -f "test/gateway.yaml"
 
 echo 'Waiting for gateway to be ready'
 
-while [[ "$(kubectl get pods -l app=gateway -o jsonpath='{.items[0].status.phase}' -n expressvpn)" != 'Running' ]]; do
+while [[ "$("$KUBECTL" get pods -l app=gateway -o jsonpath='{.items[0].status.phase}' -n expressvpn)" != 'Running' ]]; do
     printf '.'
     sleep 1
 done
@@ -88,11 +92,11 @@ done
 echo
 sleep 3
 
-kubectl apply -f "test/client.yaml"
+"$KUBECTL" apply -f "test/client.yaml"
 
 echo 'Waiting for client to be ready'
 
-while [[ "$(kubectl get pods -l app=client -o jsonpath='{.items[0].status.phase}')" != 'Running' ]]; do
+while [[ "$("$KUBECTL" get pods -l app=client -o jsonpath='{.items[0].status.phase}')" != 'Running' ]]; do
     printf '.'
     sleep 1
 done
@@ -101,25 +105,25 @@ echo
 sleep 3
 
 echo
-kubectl get pods -o wide -n expressvpn
+"$KUBECTL" get pods -o wide -n expressvpn
 
 echo
-kubectl get pods -o wide
+"$KUBECTL" get pods -o wide
 
 echo
 echo "----------------------------- client logs -----------------------------"
 echo
-kubectl exec -it client --container gateway-sidecar -- bash -c 'cat /var/log/*.log'
+"$KUBECTL" exec -it client --container gateway-sidecar -- bash -c 'cat /var/log/*.log'
 
-GATEWAY_POD_NAME="$(kubectl get pods -l app=gateway -o jsonpath='{.items[0].metadata.name}' -n expressvpn)"
+GATEWAY_POD_NAME="$("$KUBECTL" get pods -l app=gateway -o jsonpath='{.items[0].metadata.name}' -n expressvpn)"
 
 echo
 echo "----------------------------- $GATEWAY_POD_NAME logs -----------------------------"
 echo
-kubectl exec -it "$GATEWAY_POD_NAME" -n expressvpn --container gateway-sidecar -- bash -c 'cat /var/log/*.log'
+"$KUBECTL" exec -it "$GATEWAY_POD_NAME" -n expressvpn --container gateway-sidecar -- bash -c 'cat /var/log/*.log'
 
 HOST_GLOBAL_IP="$(curl -fs ifconfig.me/ip)"
-POD_GLOBAL_IP="$(kubectl exec client --container client-app -- curl -s ifconfig.me/ip)"
+POD_GLOBAL_IP="$("$KUBECTL" exec client --container client-app -- curl -s ifconfig.me/ip)"
 
 if [[ "$HOST_GLOBAL_IP" != "$POD_GLOBAL_IP" ]]; then
     echo
