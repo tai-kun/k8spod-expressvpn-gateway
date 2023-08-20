@@ -3,7 +3,7 @@
 set -euo pipefail
 
 export APP_LOG_LV="${APP_LOG_LV:-info}"
-export APP_LOG_DIR="${APP_LOG_DIR:-/var/log}"
+export APP_LOG_DIR="${APP_LOG_DIR:-}"
 export APP_LOG_FILE_PREFIX="${APP_LOG_FILE_PREFIX:-app}"
 export APP_VXLAN_IP_NETWORK="${APP_VXLAN_IP_NETWORK:-172.29.0}"
 export APP_GATEWAY_VXLAN_IP="${APP_VXLAN_IP_NETWORK}.1"
@@ -33,14 +33,17 @@ fi
 function _get_log_file() {
     local DATETIME
 
-    DATETIME="$(date -u '+%Y%m%d')"
-    DATETIME="$(( DATETIME - 7 ))"
+    if [[ "$APP_LOG_DIR" == '' ]]; then
+        echo '/dev/null'
+    else
+        DATETIME="$(date -u '+%Y%m%d')"
 
-    if [[ "$DATETIME" -ge "$APP_LOG_FILE_DATETIME" ]]; then
-        APP_LOG_FILE_DATETIME="$DATETIME"
+        if [[ "$(( DATETIME - 7 ))" -ge "$APP_LOG_FILE_DATETIME" ]]; then
+            APP_LOG_FILE_DATETIME="$DATETIME"
+        fi
+
+        echo "${APP_LOG_DIR}/${APP_LOG_FILE_PREFIX}_${APP_LOG_FILE_DATETIME}.log"
     fi
-
-    echo "${APP_LOG_DIR}/${APP_LOG_FILE_PREFIX}_${APP_LOG_FILE_DATETIME}.log"
 }
 
 function log() {
@@ -48,24 +51,15 @@ function log() {
     local RAW_LABEL
     local LOG_FILE
 
-    LOG_FILE="$(_get_log_file)"
+    if [[ $(_to_log_level_num "${1,,}") -ge "$APP_LOG_LV_NUM" ]]; then
+        TIMESTAMP="$(date -u '+%Y-%m-%dT%H:%M:%S')Z"
+        RAW_LABEL="$TIMESTAMP $(printf '%-5s\n' "${1^^}")"
+        LOG_FILE="$(_get_log_file)"
 
-    if [[ "$#" -lt 2 ]]; then
-        echo "$1" >> "$LOG_FILE" || true
+        shift
 
-        return 0
+        echo "$RAW_LABEL $*" | tee -a "$LOG_FILE"
     fi
-
-    if [[ $(_to_log_level_num "${1,,}") -lt "$APP_LOG_LV_NUM" ]]; then
-        return 0
-    fi
-
-    TIMESTAMP="$(date -u '+%Y-%m-%dT%H:%M:%S')Z"
-    RAW_LABEL="$TIMESTAMP $(printf '%-5s\n' "${1^^}")"
-
-    shift
-
-    echo "$RAW_LABEL $*" >> "$LOG_FILE" || true
 }
 
 IPV4_REGEX='^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$'
